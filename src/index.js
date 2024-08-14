@@ -1,15 +1,23 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npx wrangler dev src/index.js` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npx wrangler publish src/index.js --name my-worker` to publish your worker
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import listAudioFiles from './api/list-audio-files';
+import getAudio from './api/get-audio';
+import getPhoto from './api/get-photo';
+import getPhotosByDate from './api/get-photos-by-date';
 
 export default {
-	async fetch(request, env, ctx) {
-		return new Response("Hello World!");
-	},
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const path = url.pathname;
+
+    if (path === '/api/list-audio-files') {
+      return await listAudioFiles.fetch(request, env);
+    } else if (path === '/api/get-audio') {
+      return await getAudio.fetch(request, env);
+    } else if (path === '/api/get-photo') {
+      return await getPhoto.fetch(request, env);
+    } else if (path === '/api/get-photos-by-date') {
+      return await getPhotosByDate.fetch(request, env);
+    } else {
+      return new Response('Not Found', { status: 404 });
+    }
+  }
 };

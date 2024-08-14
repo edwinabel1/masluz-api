@@ -1,3 +1,13 @@
 name = "masluz-api"
 main = "src/index.js"
 compatibility_date = "2024-08-14"
+
+[[r2_buckets]]
+binding = "AUDIO_BUCKET"
+bucket_name = "rec2daycomprimido"
+preview_bucket_name = "rec2daycomprimido"
+
+[[r2_buckets]]
+binding = "PHOTO_BUCKET"
+bucket_name = "pic2day"
+preview_bucket_name = "pic2day"
