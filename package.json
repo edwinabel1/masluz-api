@@ -1,0 +1,12 @@
+{
+  "name": "masluz-api",
+  "version": "0.0.0",
+  "devDependencies": {
+    "wrangler": "3.71.0"
+  },
+  "private": true,
+  "scripts": {
+    "start": "wrangler dev",
+    "deploy": "wrangler deploy"
+  }
+}
