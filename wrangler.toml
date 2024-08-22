@@ -11,3 +11,8 @@ preview_bucket_name = "rec2daycomprimido"
 binding = "PHOTO_BUCKET"
 bucket_name = "pic2day"
 preview_bucket_name = "pic2day"
+
+[[d1_databases]]
+binding = "MASLUZ_D1"
+database_name = "masluz-d1"
+database_id = "43cf636e-766f-4162-92af-66e0c769d9d1"
