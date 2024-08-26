@@ -31,7 +31,7 @@ async function handleGetRequest(request, env) {
         SELECT sequence, start_time, end_time, text
         FROM subtitles
         WHERE video_id = ? AND language = ?
-        ORDER BY sequence ASC
+        ORDER BY start_time ASC
       `).bind(videoId, language).all();
 
       // 返回查询结果
