@@ -4,6 +4,7 @@ import getPhoto from './api/get-photo';
 import getPhotosByDate from './api/get-photos-by-date';
 import uploadSubtitle from './api/upload-subtitle';
 import getSubtitles from './api/get-subtitles';
+import deleteSubtitle from './api/delete-subtitle';
 
 export default {
   async fetch(request, env) {
@@ -26,6 +27,8 @@ export default {
       response = await uploadSubtitle.fetch(request, env);
     } else if (path === '/api/get-subtitles') {
       response = await getSubtitles.fetch(request, env);
+    } else if (path === '/api/delete-subtitle') {
+      response = await deleteSubtitle.fetch(request, env);
     } else {
       response = new Response('Not Found', { status: 404 });
     }
