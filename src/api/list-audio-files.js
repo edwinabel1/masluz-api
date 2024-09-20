@@ -6,7 +6,7 @@ export default {
 
       // 生成文件列表，返回对象的基本元数据
       const files = listResults.objects
-        .filter(item => item.key.endsWith('.mp3')) // 仅保留 .mp3 文件
+        .filter(item => item.key.endsWith('.mp3') || item.key.endsWith('.m4a')) // 保留 .mp3 和 .m4a 文件
         .map(item => {
           const key = item.key;
 
