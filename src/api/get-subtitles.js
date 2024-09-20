@@ -1,133 +1,47 @@
-import React, { useState, useEffect } from 'react';
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const pathname = url.pathname;
 
-function SubtitleSidebar({ subtitles, onSendSubtitle, audioRef, courseId }) {
-  const [newSubtitle, setNewSubtitle] = useState('');
-  const [isUploading, setIsUploading] = useState(false);
-  const [currentSubtitleIndex, setCurrentSubtitleIndex] = useState(null);
-
-  const handleInputChange = (e) => {
-    setNewSubtitle(e.target.value);
-  };
-
-  const handleSend = async () => {
-    if (audioRef.current && newSubtitle.trim() !== '') {
-      const currentTime = audioRef.current.currentTime;
-      const newSub = {
-        start_time: currentTime - 5,
-        end_time: currentTime,
-        text: newSubtitle,
-      };
-
-      onSendSubtitle(newSub);
-      setNewSubtitle('');
-
-      setIsUploading(true);
-      try {
-        const formData = new FormData();
-        formData.append('subtitle', newSubtitle);
-        formData.append('video_id', courseId);
-        formData.append('language', 'es');
-        formData.append('start_time', currentTime - 5);
-        formData.append('end_time', currentTime);
-
-        const response = await fetch('https://masluz-api.edwin-abel-3.workers.dev/api/upload-subtitle', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (response.ok) {
-          console.log('Subtitle uploaded successfully');
-        } else {
-          console.error('Failed to upload subtitle');
-        }
-      } catch (error) {
-        console.error('Error uploading subtitle:', error);
-      } finally {
-        setIsUploading(false);
-      }
+    if (request.method === 'GET' && pathname === '/api/get-subtitles') {
+      return handleGetRequest(request, env);
     }
-  };
 
-  const handleDelete = async (subtitleId) => {
+    return new Response('Method not allowed', { status: 405 });
+  },
+};
+
+async function handleGetRequest(request, env) {
+  try {
+    const url = new URL(request.url);
+    const videoId = url.searchParams.get('video_id');
+    const language = url.searchParams.get('language');
+
+    // 检查所需参数
+    if (!videoId || !language) {
+      return new Response(JSON.stringify({ error: 'Missing required parameters' }), { status: 400 });
+    }
+
+    // 连接到 Cloudflare D1 数据库
+    const db = env.MASLUZ_D1;
+
     try {
-      const response = await fetch(`https://masluz-api.edwin-abel-3.workers.dev/api/delete-subtitle?id=${subtitleId}`, {
-        method: 'DELETE',
-      });
+      // 查询该视频的全部字幕，按 sequence 排序
+      const subtitles = await db.prepare(`
+        SELECT id, sequence, start_time, end_time, text
+        FROM subtitles
+        WHERE video_id = ? AND language = ?
+        ORDER BY start_time ASC
+      `).bind(videoId, language).all();
 
-      if (response.ok) {
-        console.log('Subtitle deleted successfully');
-        const updatedSubtitles = subtitles.filter(sub => sub.id !== subtitleId);
-        onSendSubtitle(updatedSubtitles);
-      } else {
-        console.error('Failed to delete subtitle');
-      }
+      // 返回查询结果
+      return new Response(JSON.stringify(subtitles.results), { status: 200 });
     } catch (error) {
-      console.error('Error deleting subtitle:', error);
+      console.error('Error retrieving subtitles:', error);
+      return new Response(JSON.stringify({ error: 'Failed to retrieve subtitles' }), { status: 500 });
     }
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      handleSend();
-    }
-  };
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (audioRef.current) {
-        const currentTime = audioRef.current.currentTime;
-        const currentSubIndex = subtitles.findIndex(
-          sub => currentTime >= sub.start_time && currentTime <= sub.end_time
-        );
-        setCurrentSubtitleIndex(currentSubIndex);
-      }
-    }, 100);
-
-    return () => clearInterval(interval);
-  }, [subtitles, audioRef]);
-
-  return (
-    <div className="w-full h-full bg-gray-800 p-4 flex flex-col justify-between">
-      <div className="flex-grow overflow-y-auto mb-4">
-        {subtitles.map((sub, index) => (
-          <div
-            key={index}
-            className={`mb-2 p-2 rounded flex justify-between items-center ${index === currentSubtitleIndex ? 'bg-blue-600 text-white' : 'bg-gray-700 text-white'}`}
-          >
-            <div>
-              <p className="text-sm">{sub.text}</p>
-              <p className="text-xs text-gray-400">
-                {`Start: ${sub.start_time ? sub.start_time.toFixed(2) : 'N/A'}s, End: ${sub.end_time ? sub.end_time.toFixed(2) : 'N/A'}s`}
-              </p>
-            </div>
-            <button
-              onClick={() => handleDelete(sub.id)}
-              className="ml-2 text-red-500 hover:text-red-700"
-            >
-              🗑️
-            </button>
-          </div>
-        ))}
-      </div>
-      <div className="flex items-center">
-        <input
-          type="text"
-          value={newSubtitle}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          placeholder="输入字幕..."
-          className="w-full p-2 rounded-l bg-gray-700 text-white"
-        />
-        <button
-          onClick={handleSend}
-          className="bg-blue-600 text-white p-2 rounded-r"
-          disabled={isUploading}
-        >
-          {isUploading ? '上传中...' : '发送'}
-        </button>
-      </div>
-    </div>
-  );
+  } catch (error) {
+    console.error('Error handling request:', error);
+    return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
+  }
 }
-
-export default SubtitleSidebar;
