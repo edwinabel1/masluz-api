@@ -6,6 +6,13 @@ import uploadSubtitle from './api/upload-subtitle';
 import getSubtitles from './api/get-subtitles';
 import deleteSubtitle from './api/delete-subtitle';
 
+// 引入新的 lecciones API 文件
+import createLeccion from './api/lecciones/createLeccion';
+import getAllLecciones from './api/lecciones/getAllLecciones';
+import getLeccionById from './api/lecciones/getLeccionById';
+import updateLeccion from './api/lecciones/updateLeccion';
+import deleteLeccion from './api/lecciones/deleteLeccion';
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -29,6 +36,18 @@ export default {
       response = await getSubtitles.fetch(request, env);
     } else if (path === '/api/delete-subtitle') {
       response = await deleteSubtitle.fetch(request, env);
+    }
+    // 新的 lecciones API 处理
+    else if (path === '/api/lecciones/create') {
+      response = await createLeccion.fetch(request, env);
+    } else if (path === '/api/lecciones') {
+      response = await getAllLecciones.fetch(request, env);
+    } else if (path.startsWith('/api/lecciones/get')) {
+      response = await getLeccionById.fetch(request, env);
+    } else if (path === '/api/lecciones/update') {
+      response = await updateLeccion.fetch(request, env);
+    } else if (path.startsWith('/api/lecciones/delete')) {
+      response = await deleteLeccion.fetch(request, env);
     } else {
       response = new Response('Not Found', { status: 404 });
     }
